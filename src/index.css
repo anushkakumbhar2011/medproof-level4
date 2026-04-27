@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-regular text-gray-900 antialiased;
+  }
+}
+
+@layer utilities {
+  /* Animations */
+  @keyframes slide-in-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-up {
+    animation: slide-in-up 150ms ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 150ms ease-out;
+  }
+
+  /* Focus rings */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  /* Transitions */
+  .transition-page {
+    transition: opacity 150ms ease-out;
+  }
+
+  .transition-card {
+    transition: background-color 100ms ease-out;
+  }
+
+  .transition-dropdown {
+    transition: all 150ms ease-in-out;
+  }
+}

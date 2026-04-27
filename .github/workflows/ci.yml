@@ -1,0 +1,166 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file for CI
+        run: |
+          cat > .env << EOF
+          VITE_STELLAR_RPC_URL=${{ secrets.STELLAR_RPC_URL }}
+          VITE_STELLAR_NETWORK_PASSPHRASE=${{ secrets.STELLAR_NETWORK_PASSPHRASE }}
+          VITE_RECORDS_CONTRACT_ID=${{ secrets.RECORDS_CONTRACT_ID }}
+          VITE_VERIFICATION_CONTRACT_ID=${{ secrets.VERIFICATION_CONTRACT_ID }}
+          VITE_PINATA_JWT=${{ secrets.PINATA_JWT }}
+          VITE_PINATA_GATEWAY=${{ secrets.PINATA_GATEWAY }}
+          EOF
+
+      - name: Validate environment variables
+        run: |
+          set -e
+          echo "Validating environment variables..."
+          
+          if [ -z "${{ secrets.STELLAR_RPC_URL }}" ]; then
+            echo "ERROR: STELLAR_RPC_URL secret is missing or empty"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.STELLAR_NETWORK_PASSPHRASE }}" ]; then
+            echo "ERROR: STELLAR_NETWORK_PASSPHRASE secret is missing or empty"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.RECORDS_CONTRACT_ID }}" ]; then
+            echo "ERROR: RECORDS_CONTRACT_ID secret is missing or empty"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.VERIFICATION_CONTRACT_ID }}" ]; then
+            echo "ERROR: VERIFICATION_CONTRACT_ID secret is missing or empty"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.PINATA_JWT }}" ]; then
+            echo "ERROR: PINATA_JWT secret is missing or empty"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.PINATA_GATEWAY }}" ]; then
+            echo "ERROR: PINATA_GATEWAY secret is missing or empty"
+            exit 1
+          fi
+          
+          echo "✓ All environment variables are configured"
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "ERROR: dist/ directory not found after build"
+            exit 1
+          fi
+          
+          if [ ! -f "dist/index.html" ]; then
+            echo "ERROR: dist/index.html not found"
+            exit 1
+          fi
+          
+          if [ ! -f "dist/assets/index-"*.js ]; then
+            echo "ERROR: No JavaScript bundle found in dist/assets/"
+            exit 1
+          fi
+          
+          echo "✓ Build output verified successfully"
+          ls -lah dist/
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  contracts-build:
+    name: Build Smart Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts
+
+      - name: Install soroban-cli
+        run: cargo install --locked soroban-cli
+
+      - name: Build Records contract
+        run: |
+          cd contracts/records
+          soroban contract build
+          echo "✓ Records contract built successfully"
+
+      - name: Build Verification contract
+        run: |
+          cd contracts/verification
+          soroban contract build
+          echo "✓ Verification contract built successfully"
+
+      - name: Verify WASM output files
+        run: |
+          set -e
+          
+          RECORDS_WASM="contracts/records/target/wasm32-unknown-unknown/release/medproof_records.wasm"
+          VERIFICATION_WASM="contracts/verification/target/wasm32-unknown-unknown/release/medproof_verification.wasm"
+          
+          if [ ! -f "$RECORDS_WASM" ]; then
+            echo "ERROR: Records contract WASM not found at $RECORDS_WASM"
+            exit 1
+          fi
+          
+          if [ ! -f "$VERIFICATION_WASM" ]; then
+            echo "ERROR: Verification contract WASM not found at $VERIFICATION_WASM"
+            exit 1
+          fi
+          
+          echo "✓ Records contract WASM: $(ls -lh $RECORDS_WASM | awk '{print $5}')"
+          echo "✓ Verification contract WASM: $(ls -lh $VERIFICATION_WASM | awk '{print $5}')"
