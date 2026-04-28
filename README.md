@@ -1,5 +1,8 @@
 # MedProof - Decentralized Medical Record Verification on Stellar Soroban
 
+## ⚙️ CI/CD Status
+![CI/CD](https://github.com/anushkakumbhar2011/medproof/actions/workflows/ci.yml/badge.svg)
+
 A production-ready decentralized platform for storing and verifying medical records using IPFS and Stellar Soroban smart contracts. Patients retain ownership of their encrypted files, doctors submit on-chain verifications via Freighter wallet authentication, and any third party can validate a record's authenticity through a public hash-based lookup — without accessing the underlying data.
 
 ## 🚀 Quick Start
