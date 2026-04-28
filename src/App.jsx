@@ -16,6 +16,9 @@ import UploadRecord from './pages/UploadPage'
 import RecordDetails from './pages/RecordDetails'
 import Verify from './pages/Verify'
 import Profile from './pages/Profile'
+import EventsPage from './pages/EventsPage'
+import EventDetailPage from './pages/EventDetailPage'
+import CreateEventPage from './pages/CreateEventPage'
 
 // Guards
 import PrivateRoute from './guards/PrivateRoute'
@@ -54,6 +57,11 @@ function App() {
 
             <Route path="/record/:id" element={<RecordDetails />} />
             <Route path="/profile" element={<Profile />} />
+
+            {/* Events routes */}
+            <Route path="/events" element={<EventsPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route path="/events/create" element={<CreateEventPage />} />
           </Route>
         </Route>
 

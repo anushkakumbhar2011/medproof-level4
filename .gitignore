@@ -27,3 +27,4 @@ npm-debug.log*
 target/
 Cargo.lock
 *.wasm
+.vercel

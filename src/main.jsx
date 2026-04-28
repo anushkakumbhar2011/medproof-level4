@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { AuthProvider } from './context/AuthContext'
 import { RecordsProvider } from './context/RecordsContext'
+import { EventsProvider } from './context/EventsContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import App from './App'
 import './index.css'
@@ -18,7 +19,9 @@ if (!root) {
       <ErrorBoundary>
         <AuthProvider>
           <RecordsProvider>
-            <App />
+            <EventsProvider>
+              <App />
+            </EventsProvider>
           </RecordsProvider>
         </AuthProvider>
       </ErrorBoundary>
